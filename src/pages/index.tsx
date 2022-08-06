@@ -6,6 +6,7 @@ import { getPrismicClient } from '../services/prismic';
 
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import Header from '../components/Header';
 
 interface Post {
   uid?: string;
@@ -26,12 +27,10 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home(): JSX.Element {
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
   return (
     <div className={commonStyles.container}>
-      <header className={styles.header}>
-        <img src="/assets/logo.svg" alt="" />
-      </header>
+      <Header />
       <main className={styles.articles}>
         <article className={styles.article}>
           <h1>Como utilizar Hooks</h1>

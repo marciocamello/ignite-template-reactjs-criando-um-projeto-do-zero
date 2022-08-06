@@ -1,1 +1,86 @@
-// TODO
+.header{
+  margin: 5rem 0;
+}
+
+.articles{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  .article{
+
+   h1{
+    font-size: 1.75rem;
+    line-height: 2rem;
+    color:var(--heading);
+    font-weight: 700;
+   }
+
+   p{
+    margin: 0.8rem 0;
+    font-size: 1.125rem;
+    line-height: 1.2rem;
+    color:var(--body);
+   }
+
+   .articleInfo{
+    margin-top: 1.5rem;
+    display: flex;
+
+    div{
+      display: flex;
+      align-items: center;
+
+      svg, span,time{
+        color: var(--info);
+      }
+
+      svg{
+        margin-right: 0.5rem;
+      }
+
+      span, time{
+        margin-right: 1.5rem;
+      }
+    }
+   }
+
+    & + .article{
+      margin-top: 3rem;
+    }
+  }
+}
+
+.loadingMoreArticles{
+
+  width: 100%;
+  display: flex;
+  margin-top:4rem;
+
+  button{
+    color: var(--highlight);
+    font-size: 1.125rem;
+    font-weight: 700;
+    padding: 0.5rem 0;
+    border: 0;
+    background: transparent;
+  }
+}
+
+.previewButton{
+
+  width: 100%;
+  display: flex;
+  margin-top:5.5rem;
+
+  button{
+    color: var(--background);
+    background: var(--heading);
+    border: 0;
+    border-radius: 4px;
+    height: 3.625rem;
+    width: 100%;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}

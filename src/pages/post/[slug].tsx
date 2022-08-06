@@ -1,6 +1,10 @@
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 import { GetStaticPaths, GetStaticProps } from 'next';
 
+import { format, formatRelative, minutesToHours } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useRouter } from 'next/router';
+import { RichText } from 'prismic-dom';
 import { getPrismicClient } from '../../services/prismic';
 
 import Header from '../../components/Header';
@@ -29,64 +33,145 @@ interface PostProps {
   post: Post;
 }
 
+interface Content {
+  heading: string;
+  body: {
+    text: string;
+  }[];
+}
+
 export default function Post({ post }: PostProps): JSX.Element {
+  const { isFallback } = useRouter();
+
+  if (isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+  function formatDate(date: string): string {
+    return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
+  }
+
+  function calculateReadingTime(content: Content[]): string {
+    const getHeadingWordsPerMinutes = content.reduce((acc, currentValue) => {
+      return currentValue.heading.split(/\s+/).length + acc;
+    }, 0);
+
+    const getBodyWordsPerMinutes = content.reduce((acc, currentValue) => {
+      return RichText.asText(currentValue.body).split(/\s+/).length + acc;
+    }, 0);
+
+    const getWordsPerMinutes = Math.ceil(
+      (getHeadingWordsPerMinutes + getBodyWordsPerMinutes) / 200
+    );
+
+    if (getWordsPerMinutes < 1) {
+      return 'Rápida leitura';
+    }
+
+    if (getWordsPerMinutes < 60) {
+      return `${getWordsPerMinutes} min`;
+    }
+
+    return `${minutesToHours(getWordsPerMinutes)} horas`;
+  }
+
   return (
     <>
       <div className={commonStyles.container}>
         <Header />
       </div>
       <div className={styles.articleMain}>
-        <img src="/assets/logo.svg" alt="" />
+        <img src={post.data.banner.url} alt="" />
 
         <main className={commonStyles.container}>
           <article className={styles.article}>
             <header>
-              <h1>Como utilizar Hooks</h1>
+              <h1>{post.data.title}</h1>
               <div className={styles.articleInfo}>
                 <div>
                   <FiCalendar size={18} />
-                  <time dateTime="2020-01-01">15 Mar 2021</time>
+                  <time dateTime={post.first_publication_date}>
+                    {formatDate(post.first_publication_date)}
+                  </time>
                 </div>
                 <div>
-                  <FiUser size={18} /> <span>Joseph Oliveira</span>
+                  <FiUser size={18} />
+                  <span>{post.data.author}</span>
                 </div>
                 <div>
-                  <FiClock size={18} /> <span>4 min</span>
+                  <FiClock size={18} />
+                  <span>{calculateReadingTime(post.data.content)}</span>
                 </div>
               </div>
               <span className={styles.lastUpdate}>
-                * editado em 19 mar 2021, às 15:49
+                * editado em{' '}
+                {formatRelative(
+                  new Date(post.first_publication_date),
+                  new Date(),
+                  { locale: ptBR }
+                )}
               </span>
             </header>
-
-            <section className={styles.articleContent}>
-              {/* <h2>Proin et varius</h2>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
-                dolor sapien, vulputate eu diam at, condimentum hendrerit
-                tellus. Nam facilisis sodales felis, pharetra pharetra lectus
-                auctor sed. Ut venenatis mauris vel libero pretium, et pretium
-                ligula faucibus. Morbi nibh felis, elementum a posuere et,
-                vulputate et erat. Nam venenatis.
-              </p> */}
-            </section>
+            {post.data.content.map(content => (
+              <section className={styles.articleContent} key={content.heading}>
+                <h1>{content.heading}</h1>
+                <div
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
+                />
+              </section>
+            ))}
           </article>
         </main>
       </div>
     </>
   );
 }
+export const getStaticPaths: GetStaticPaths = async () => {
+  const prismic = getPrismicClient({});
+  const posts = await prismic.getByType('posts', {
+    fetch: ['posts.slug'],
+  });
 
-// export const getStaticPaths = async () => {
-//   const prismic = getPrismicClient({});
-//   const posts = await prismic.getByType(TODO);
+  const params = posts.results.map(post => ({
+    params: { slug: post.uid },
+  }));
 
-//   // TODO
-// };
+  return {
+    paths: params,
+    fallback: true,
+  };
+};
 
-// export const getStaticProps = async ({params }) => {
-//   const prismic = getPrismicClient({});
-//   const response = await prismic.getByUID(TODO);
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const { slug } = params;
 
-//   // TODO
-// };
+  const prismic = getPrismicClient({});
+  const response = await prismic.getByUID('posts', String(slug), {});
+
+  const postData = {
+    data: {
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      banner: {
+        url: response.data.banner.url ?? '',
+      },
+      author: response.data.author,
+      content: response.data.content.map(content => ({
+        heading: content.heading,
+        body: content.body,
+      })),
+    },
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
+  } as Post;
+
+  return {
+    props: {
+      post: postData,
+    },
+    revalidate: 60 * 60 * 24,
+  };
+};

@@ -50,7 +50,8 @@
       }
 
       .lastUpdate{
-        display: block;
+        display: flex;
+        align-items: center;
         margin-top: 1.5rem;
         font-size: 0.875rem;
         line-height: 1rem;
@@ -64,6 +65,22 @@
       width: 100%;
       display: flex;
       flex-direction: column;
+
+      h1{
+        font-size: 1.75rem;
+        line-height: 2rem;
+        color:var(--heading);
+        font-weight: 700;
+        margin-bottom: 3rem;
+      }
+
+      p{
+        margin: 0.8rem 0;
+        font-size: 1.125rem;
+        line-height: 1.5rem;
+        color:var(--body);
+        margin-bottom: 3rem;
+      }
     }
 
    }

@@ -1,5 +1,3 @@
-
-
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { GetStaticPropsContext } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -190,7 +188,7 @@ describe('Home', () => {
     render(<App postsPagination={postsPagination} />);
 
     screen.getByText('Como utilizar Hooks');
-    const loadMorePostsButton = screen.getByText('Carregar mais posts');
+    const loadMorePostsButton = screen.getByText('Carregar mais artigos');
 
     fireEvent.click(loadMorePostsButton);
 
@@ -212,7 +210,7 @@ describe('Home', () => {
 
     screen.getByText('Como utilizar Hooks');
     screen.getByText('Criando um app CRA do zero');
-    const loadMorePostsButton = screen.queryByText('Carregar mais posts');
+    const loadMorePostsButton = screen.queryByText('Carregar mais artigos');
 
     expect(loadMorePostsButton).not.toBeInTheDocument();
   });
